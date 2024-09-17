@@ -145,6 +145,27 @@ func (j *Client) makeAPIrequest(r *http.Request, v interface{}) error {
 	}
 	defer res.Body.Close()
 
+	// Handle 401 Unauthorized: clear token, get a new one, and retry
+	if res.StatusCode == http.StatusUnauthorized {
+		if j.useAuthToken {
+			j.authToken.Token = "" // Clear the current token
+
+			// Get a fresh token and retry the request
+			if err := j.GetAuthToken(); err != nil {
+				return errors.Wrapf(err, "error retrieving new auth token after 401 for %s request to %s", r.Method, r.URL)
+			}
+
+			r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", j.authToken.Token))
+
+			// Retry the request
+			res, err = j.api.Do(r)
+			if err != nil {
+				return errors.Wrapf(err, "error making %s request to %s after token refresh", r.Method, r.URL)
+			}
+			defer res.Body.Close()
+		}
+	}
+
 	// If status code is not ok attempt to read the response in plain text
 	if res.StatusCode != 200 && res.StatusCode != 201 {
 		responseData, err := io.ReadAll(res.Body)

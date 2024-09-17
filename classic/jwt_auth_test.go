@@ -15,6 +15,7 @@ func TestJWTAuthExpiration(t *testing.T) {
 		shouldBeExpired bool
 	}
 
+	jamf.ExpirationBuffer = 0
 	now := time.Now()
 
 	cases := []expirationCase{
