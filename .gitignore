@@ -8,6 +8,8 @@ coverage.html
 cp.out
 bin/
 .vscode/
+.git-credentials
+.idea/
 
 ### Emacs ###
 # -*- mode: gitignore; -*-
